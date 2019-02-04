@@ -14,6 +14,7 @@ from ntbvisa import *
 #import serial
 import matplotlib.pyplot as plt
 
+#test
 
 # DC-Load COM-port
 DCLOAD_COMPORT = "COM8"
