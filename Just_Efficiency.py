@@ -14,26 +14,23 @@ from ntbvisa import *
 #import serial
 import matplotlib.pyplot as plt
 
-#test
-
 # DC-Load COM-port
 DCLOAD_COMPORT = "COM8"
 DCLOAD_BAUD = 38400
 
-
 # parameters for load sweep
 startCurrent = 1000     #in mA
 endCurrent   = 9000     #in mA
-stepSize     =  100     #in mA
+stepSize     =  1000     #in mA
 shuntGainIin =    1
 shuntGainIout=    1
 
 # Set DMM names
-dmm_uin_name =  'TCPIP::128.138.189.100::3490::SOCKET'
-dmm_uout_name = 'TCPIP::128.138.189.229::3490::SOCKET'
+dmm_uin_name =  'TCPIP::128.138.189.186::3490::SOCKET'
+dmm_uout_name = 'TCPIP::128.138.189.69::3490::SOCKET'
 
-dmm_iin_name =  'TCPIP::128.138.189.239::3490::SOCKET'
-dmm_iout_name = 'TCPIP::128.138.189.189::3490::SOCKET'
+dmm_iin_name =  'TCPIP::128.138.189.39::3490::SOCKET'
+dmm_iout_name = 'TCPIP::128.138.189.162::3490::SOCKET'
 
 
 def main():
@@ -80,6 +77,31 @@ def main():
                           'SAMP:COUN 1']                    #Set number of samples per trigger
                           
     
+    #set up digital multimeter
+    time.sleep(1)
+    dmm_uin = NTBResource(dmm_uin_name, dmm_u_config)
+    time.sleep(1)
+    dmm_uout = NTBResource(dmm_uout_name, dmm_u_config)
+    time.sleep(1)
+    dmm_iin = NTBResource(dmm_iin_name, dmm_i_config)
+    time.sleep(1)
+    dmm_iout = NTBResource(dmm_iout_name, dmm_i_config)
+    time.sleep(1)
+    #dmm_v_name = 'TCPIP0::mmies006::INSTR'     NTB-style
+        
+    setup = NTBSetup([dmm_uin, dmm_uout, dmm_iin, dmm_iout])
+    time.sleep(1)
+    
+    #set up DC load
+    print("DC-load, init")
+    load.initialize(DCLOAD_COMPORT, DCLOAD_BAUD) # Open a serial connection
+    print("DC-load, set remote control", load.setRemoteControl())
+    print("DC-load, set max voltage to 15V", load.setMaxVoltage(15))
+    print("DC-load, set max power to 300W", load.setMaxPower(300))
+    print("DC-load, to constant current mode", load.setMode('cc'))
+    print("DC-load, set first current", load.setCCCurrent(startCurrent))
+    print("DC-load, turn on", load.turnLoadOn())
+    
     # Open log file
     try:
         filename = sys.argv[1]
@@ -89,32 +111,6 @@ def main():
         
     if not os.path.isfile(filename):
         with open(filename, 'w') as logdata: 
-
-            #set up DC load
-            print("DC-load, init")
-            load.initialize(DCLOAD_COMPORT, DCLOAD_BAUD) # Open a serial connection
-            print("DC-load, set remote control", load.setRemoteControl())
-            print("DC-load, set max voltage to 15V", load.setMaxVoltage(15))
-            print("DC-load, set max power to 300W", load.setMaxPower(300))
-            print("DC-load, to constant current mode", load.setMode('cc'))
-            print("DC-load, set first current", load.setCCCurrent(startCurrent))
-            print("DC-load, turn on", load.turnLoadOn())
-            
-            #set up digital multimeter
-            time.sleep(1)
-            dmm_uin = NTBResource(dmm_uin_name, dmm_u_config)
-            time.sleep(1)
-            dmm_uout = NTBResource(dmm_uout_name, dmm_u_config)
-            time.sleep(1)
-            dmm_iin = NTBResource(dmm_iin_name, dmm_i_config)
-            time.sleep(1)
-            dmm_iout = NTBResource(dmm_iout_name, dmm_i_config)
-            time.sleep(1)
-            #dmm_v_name = 'TCPIP0::mmies006::INSTR'     NTB-style
-                
-            setup = NTBSetup([dmm_uin, dmm_uout, dmm_iin, dmm_iout])
-            time.sleep(1)
-
 
             # Print header
             row_head = ("Time Uin[V] Iin[A] Pin[W] Uout[V] Iout[A] Pout[W] n[]")
@@ -159,7 +155,7 @@ def main():
                     
                     #store efficiency for plot
                     efficiency.append(res_eff)
-                    current.append(actualCurrent)
+                    current.append(actualCurrent/1000)
 
                     
                     #Save measurements in logfile
@@ -185,9 +181,9 @@ def main():
         lastCurrentSetting = int(load.getCCCurrent())
 
         for actualCurrent in range(lastCurrentSetting, startCurrent-stepSize, -stepSize):
-            print("Set current to %i mA" % actualCurrent)
+            print("Set current to %i A" % actualCurrent)
             load.setCCCurrent(actualCurrent)
-            time.sleep(0.2)
+            time.sleep(0.1)
         
         print("turn off load and set local control")
         print(load.turnLoadOff())
