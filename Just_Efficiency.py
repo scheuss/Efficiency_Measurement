@@ -34,7 +34,6 @@ dmm_iout_name = 'TCPIP::128.138.189.162::3490::SOCKET'
 
 
 def main():
-
     ###############################################################################
     # Provide Logging Facility
     ###############################################################################
@@ -76,7 +75,6 @@ def main():
                           'TRIG:SOUR IMM',                  #Set meter’s trigger source
                           'SAMP:COUN 1']                    #Set number of samples per trigger
                           
-    
     #set up digital multimeter
     time.sleep(1)
     dmm_uin = NTBResource(dmm_uin_name, dmm_u_config)
@@ -118,7 +116,6 @@ def main():
             print(row_head)
             
             try:
-#                while (True):
                 for actualCurrent in range(startCurrent, endCurrent + stepSize, stepSize):
                     #print("Set current to %i mA" % actualCurrent)
                     load.setCCCurrent(actualCurrent)
@@ -134,8 +131,6 @@ def main():
                     res_iin_raw = dmm_iin.query('FETC?', 'values')[0]
                     res_iout_raw = dmm_iout.query('FETC?', 'values')[0]
                     
-
-
                     res_time = time.strftime('%H:%M:%S')                    
                     
                     #scale if shunt is used
@@ -197,18 +192,10 @@ def main():
         plt.grid(b=True, which='major', color='b', linestyle='-')
         plt.show()
         
-        
             
     else:
         print('file already exists')
 
-        
-
-        
-        
 
 if __name__== "__main__":
     main()
-
-    
- 
